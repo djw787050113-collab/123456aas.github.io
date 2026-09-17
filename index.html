@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>我是安州王 · 蔚蔚</title>
+<style>
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;overflow:hidden;}
+
+  body{
+    font-family:"楷体","KaiTi","STKaiti","华文楷体","Kaiti SC","楷体_GB2312",serif;
+    background:#3d0000;
+    display:flex;align-items:center;justify-content:center;
+    position:relative;
+    user-select:none;
+    -webkit-tap-highlight-color:transparent;
+  }
+
+  /* ===== 红色闪耀背景 ===== */
+  .bg{
+    position:fixed;inset:-25%;z-index:0;
+    background:radial-gradient(circle at 50% 45%,
+      #ff5b5b 0%, #e60000 22%, #a30000 45%, #5a0000 70%, #260000 100%);
+    animation:bgGlow 2.4s ease-in-out infinite;
+  }
+  @keyframes bgGlow{
+    0%,100%{filter:brightness(.8) saturate(1.2);transform:scale(1);}
+    50%    {filter:brightness(1.75) saturate(1.9);transform:scale(1.07);}
+  }
+
+  /* ===== 旋转光芒 ===== */
+  .rays{
+    position:fixed;inset:-50%;z-index:1;pointer-events:none;
+    background:repeating-conic-gradient(from 0deg at 50% 50%,
+      rgba(255,225,130,.35) 0deg 4deg,
+      rgba(255,225,130,0)  4deg 15deg);
+    mix-blend-mode:screen;
+    opacity:.75;
+    animation:spin 26s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* ===== 星光粒子 ===== */
+  .stars{position:fixed;inset:0;z-index:2;pointer-events:none;}
+  .star{
+    position:absolute;border-radius:50%;background:#fff;
+    box-shadow:0 0 8px #fff,0 0 18px #ffd54a;
+    animation:twinkle 1.6s ease-in-out infinite;
+  }
+  @keyframes twinkle{
+    0%,100%{opacity:0;transform:scale(.3);}
+    50%    {opacity:1;transform:scale(1.4);}
+  }
+
+  /* ===== 文字 ===== */
+  .stage{position:relative;z-index:3;text-align:center;padding:24px 16px 130px;}
+
+  .title{
+    --fs:15vmin;
+    margin:0;
+    font-size:var(--fs);
+    line-height:1.3;
+    letter-spacing:.06em;
+    font-weight:700;
+    transition:font-size .5s cubic-bezier(.34,1.56,.64,1);
+    filter:drop-shadow(0 0 16px rgba(255,220,120,.95));
+  }
+
+  .ch{
+    display:inline-block;
+    color:#fffbe6;
+    text-shadow:
+      0 0 6px #fff,
+      0 0 18px #ffd54a,
+      0 0 38px #ff8a00,
+      0 0 72px #ff2d00,
+      0 5px 0 rgba(120,0,0,.9);
+    animation:breathe 1.9s ease-in-out infinite;
+    will-change:transform;
+  }
+  @keyframes breathe{
+    0%,100%{transform:scale(1) translateY(0);}
+    50%    {transform:scale(1.55) translateY(-.06em);}
+  }
+  .title.paused .ch{animation-play-state:paused;}
+
+  /* ===== 控制面板 ===== */
+  .panel{
+    position:fixed;left:50%;bottom:24px;transform:translateX(-50%);
+    z-index:5;display:flex;gap:10px;flex-wrap:wrap;justify-content:center;
+    padding:10px 16px;border-radius:999px;
+    background:rgba(0,0,0,.38);
+    border:1px solid rgba(255,215,120,.45);
+    backdrop-filter:blur(6px);
+    -webkit-backdrop-filter:blur(6px);
+    max-width:94vw;
+  }
+  .panel button{
+    font-family:inherit;font-size:16px;font-weight:700;
+    color:#fff3c4;
+    background:linear-gradient(#c40000,#7a0000);
+    border:1px solid rgba(255,215,120,.6);
+    border-radius:999px;
+    padding:8px 18px;
+    cursor:pointer;
+    box-shadow:0 0 12px rgba(255,180,0,.5);
+    transition:transform .2s, box-shadow .2s, background .2s, color .2s;
+  }
+  .panel button:hover{
+    transform:translateY(-2px);
+    box-shadow:0 0 22px rgba(255,220,120,.95);
+    color:#fff;
+  }
+  .panel button.active{
+    background:linear-gradient(#ffcc33,#ff7a00);
+    color:#6a0000;
+  }
+
+  @media (max-width:520px){
+    .panel{gap:7px;padding:8px 10px;bottom:14px;}
+    .panel button{font-size:13px;padding:6px 12px;}
+  }
+</style>
+</head>
+<body>
+
+  <div class="bg"></div>
+  <div class="rays"></div>
+  <div class="stars" id="stars"></div>
+
+  <div class="stage">
+    <h1 class="title" id="title"></h1>
+  </div>
+
+  <div class="panel">
+    <button data-scale="0.55">小</button>
+    <button data-scale="0.75">中</button>
+    <button data-scale="1" class="active">大</button>
+    <button data-scale="1.35">特大</button>
+    <button id="toggleBtn">暂停律动</button>
+  </div>
+
+<script>
+  /* ---------- 文字拆分 ---------- */
+  const TEXT = "我是安州王，蔚蔚";
+  const title = document.getElementById('title');
+
+  [...TEXT].forEach((ch, i) => {
+    const span = document.createElement('span');
+    span.className = 'ch';
+    span.textContent = ch;
+    span.style.animationDelay    = (i * 0.13).toFixed(2) + 's';
+    span.style.animationDuration = (1.65 + (i % 3) * 0.28).toFixed(2) + 's';
+    title.appendChild(span);
+  });
+
+  /* ---------- 星光粒子 ---------- */
+  const starBox = document.getElementById('stars');
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = (Math.random() * 4 + 2).toFixed(1);
+    s.style.width  = size + 'px';
+    s.style.height = size + 'px';
+    s.style.left   = (Math.random() * 100).toFixed(2) + '%';
+    s.style.top    = (Math.random() * 100).toFixed(2) + '%';
+    s.style.animationDelay    = (Math.random() * 2).toFixed(2) + 's';
+    s.style.animationDuration = (1 + Math.random() * 1.8).toFixed(2) + 's';
+    starBox.appendChild(s);
+  }
+
+  /* ---------- 字号切换 ---------- */
+  const BASE = 15; // vmin
+  const sizeBtns = document.querySelectorAll('.panel button[data-scale]');
+
+  function setScale(scale, btn) {
+    title.style.setProperty('--fs', (BASE * scale).toFixed(2) + 'vmin');
+    sizeBtns.forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+  }
+
+  sizeBtns.forEach(btn => {
+    btn.addEventListener('click', () => setScale(parseFloat(btn.dataset.scale), btn));
+  });
+
+  /* ---------- 暂停 / 继续律动 ---------- */
+  const toggleBtn = document.getElementById('toggleBtn');
+  toggleBtn.addEventListener('click', () => {
+    title.classList.toggle('paused');
+    toggleBtn.textContent = title.classList.contains('paused') ? '继续律动' : '暂停律动';
+  });
+
+  /* ---------- 键盘 1~4 快捷切字号 ---------- */
+  window.addEventListener('keydown', e => {
+    const idx = {'1':0,'2':1,'3':2,'4':3}[e.key];
+    if (idx !== undefined) {
+      const btn = sizeBtns[idx];
+      setScale(parseFloat(btn.dataset.scale), btn);
+    }
+  });
+</script>
+</body>
+</html>
